@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "MonitorBanheiro.h"
 
 char flag = 'n';//F ou V indica qual time está no banheiro atualmente
@@ -19,16 +20,19 @@ void flamenguistaQuerEntrar(){
 	if(flag == 'n'){//Flamenguistas entram primeiro no banheiro
 		flag = 'f';
 	}else if(flag == 'f'){
-
+		
 		if(pessoasNoBanheiro == 3){
+			printf("Estou esperando vaga\n");
 			temFlamenguistaNaFila++;
 			pthread_cond_wait(&vaga, &mutex);
 			temFlamenguistaNaFila--;
 		}
 		
 	}else{//Se o time no banheiro for vasco, flamenguista espera até poder entrar
+		printf("Os vascainos estão no banheiro\n");
 		temFlamenguistaNaFila++;
 		pthread_cond_wait(&flamenguistaPodeEntrar, &mutex);
+		sleep(1);
 		temFlamenguistaNaFila--;
 		flag = 'f';
 	}
@@ -41,14 +45,25 @@ void flamenguistaSai(){
 	pthread_mutex_lock(&mutex);
 
 	pessoasNoBanheiro--;
-	pthread_cond_signal(&vaga);//Libera uma vaga para alguém entrar
 
 	if(temFlamenguistaNaFila == 0 && pessoasNoBanheiro == 0){//Quando sai um flamenguista e não houver outros na fila, vascaínos podem entrar
 		pthread_cond_signal(&vascainoPodeEntrar);
+		
+		pthread_cond_signal(&vascainoPodeEntrar);
+		
+		pthread_cond_signal(&vascainoPodeEntrar);
+		
+		pthread_cond_signal(&vaga);
+		pthread_cond_signal(&vaga);
+		pthread_cond_signal(&vaga);
+		printf("Agora liberar o banheiro para os vascainos\n");
+		
 	}else{
-		pthread_cond_signal(&flamenguistaPodeEntrar);
-	}
 
+		pthread_cond_signal(&flamenguistaPodeEntrar);
+		pthread_cond_signal(&vaga);
+	}
+	
 	pthread_mutex_unlock(&mutex);
 }
 
@@ -56,18 +71,11 @@ void vascainoQuerEntrar(){
 	pthread_mutex_lock(&mutex);
 
 	if(pessoasNoBanheiro){
-		if(flag == 'v'){
-			if(pessoasNoBanheiro == 3){
-				pthread_cond_wait(&vaga, &mutex);
-			}
-		}else{
+		if(pessoasNoBanheiro == 3 || flag == 'f'){//Caso os vascaínos estjam no banheiro
+			printf("Banheiro ocupado ou tem flamenguista\n");
 			pthread_cond_wait(&vascainoPodeEntrar, &mutex);
+			pthread_cond_wait(&vaga, &mutex);
 		}
-	}else if(temFlamenguistaNaFila){//Caso tenha flamenguista, espera até poder entrar
-
-		pthread_cond_wait(&vaga, &mutex);
-		pthread_cond_wait(&vascainoPodeEntrar, &mutex);
-
 	}
 
 	pessoasNoBanheiro++;
@@ -81,16 +89,28 @@ void vascainoQuerSair(){
 	pthread_mutex_lock(&mutex);
 
 	pessoasNoBanheiro--;
-	pthread_cond_signal(&vaga);
 
-	if(temFlamenguistaNaFila){
-		if(pessoasNoBanheiro == 0){
+	if(pessoasNoBanheiro == 0){
+		if(temFlamenguistaNaFila == 0){
+			pthread_cond_signal(&vascainoPodeEntrar);
+			pthread_cond_signal(&vascainoPodeEntrar);
+			pthread_cond_signal(&vascainoPodeEntrar);
+
+			pthread_cond_signal(&vaga);
+			pthread_cond_signal(&vaga);
+			pthread_cond_signal(&vaga);
+		}else{
+			pthread_cond_signal(&flamenguistaPodeEntrar);
+			pthread_cond_signal(&flamenguistaPodeEntrar);
 			pthread_cond_signal(&flamenguistaPodeEntrar);
 		}
 	}else{
-		pthread_cond_signal(&vascainoPodeEntrar);
+		if(flag == 'v' && temFlamenguistaNaFila == 0){
+			pthread_cond_signal(&vascainoPodeEntrar);
+			pthread_cond_signal(&vaga);
+		}
 	}
-	
+
 	pthread_mutex_unlock(&mutex);
 }
 
