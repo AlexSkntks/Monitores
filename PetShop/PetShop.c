@@ -42,7 +42,9 @@ int main(){
 	printf("Digite o tamanho da sala de servico, e quantidade de caes e de gatos: ");
 	scanf("%d%d%d", &tamSala, &n_caes, &n_gatos);
 	
-	inicializaSala(tamSala, n_caes, n_gatos);
+	if(inicializaSala(tamSala, n_caes, n_gatos) == -1){
+		return 1;
+	}
 
 	/*Criando todas as threads*/
 
@@ -55,10 +57,12 @@ int main(){
 
 	/*Esperando por todas as threads*/
 	for(int i = 0; i < n_caes; i++){
-		if(pthread_join(tid_caes[i], NULL) != 0);
+		if(pthread_join(tid_caes[i], NULL) != 0) return 4;
 	}
 	for(int i = 0; i < n_gatos; i++){
-		if(pthread_join(tid_gatos[i], NULL) != 0);
+		if(pthread_join(tid_gatos[i], NULL) != 0) return 5;
 	}
+
+	desalocaEstruturas();
 	return 0;
 }

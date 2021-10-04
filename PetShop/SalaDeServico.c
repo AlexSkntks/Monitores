@@ -7,7 +7,6 @@
 sem_t sala;
 sem_t sem_gatos;
 sem_t sem_caes;
-pthread_mutex_t mutex;
 
 int numeroDeCaesNaFila = 0;
 int gatosNaSala = 0;
@@ -83,18 +82,24 @@ int inicializaSala(int maximo, int qtdCaes, int qtdGatos){
 	MAXIMO = maximo;
 
 	srand(time(NULL));
-	pthread_mutex_init(&mutex, NULL);
 
 	if(sem_init(&sem_gatos, 0, 0) == -1){
-		return 1;
+		return -1;
 	}
 
 	if(sem_init(&sem_caes, 0, 0) == -1){
-		return 1;
+		return -1;
 	}
 
 	if(sem_init(&sala, 0, MAXIMO) == -1){
-		return 1;
+		return -1;
 	}
 
+}
+
+
+void desalocaEstruturas(){
+	sem_destroy(&sala);
+	sem_destroy(&sem_gatos);
+	sem_destroy(&sem_caes);
 }

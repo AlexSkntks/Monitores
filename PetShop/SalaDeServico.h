@@ -6,4 +6,5 @@
 	void um_cao_quer_servivo();
 	void cao_atendido();
 	int inicializaSala(int maximo, int qtdCaes, int qtdGatos);
+	void desalocaEstruturas();
 #endif
